@@ -1,12 +1,12 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  FlatList,
+  StatusBar,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  View,
+} from 'react-native';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -23,14 +23,38 @@ function App() {
   );
 }
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
+type TPostProps = {
+  id?: string;
+  userId?: string;
+  title: string;
+  body: string;
+};
 
+function PostItem({ title, body }: TPostProps) {
+  return (
+    <View>
+      <Text>{title}</Text>
+      <Text>{body}</Text>
+    </View>
+  );
+}
+
+function AppContent() {
+  const [posts, setPosts] = useState<TPostProps[]>();
+
+  useEffect(() => {
+    fetch('https://jsonplaceholder.typicode.com/posts')
+      .then(response => response.json())
+      .then(responseJson => {
+        setPosts(responseJson);
+      });
+  }, []);
   return (
     <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
+      <FlatList
+        data={posts}
+        renderItem={({ item }) => <PostItem {...item} />}
+        contentContainerStyle={styles.list}
       />
     </View>
   );
@@ -40,6 +64,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  list: { gap: 16 },
 });
 
 export default App;
