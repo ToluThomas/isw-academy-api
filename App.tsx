@@ -7,7 +7,7 @@
 
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StatusBar, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { ActivityIndicator, FlatList, RefreshControl, StatusBar, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import {
   SafeAreaProvider,
   useSafeAreaInsets,
@@ -27,6 +27,10 @@ function App() {
     </SafeAreaProvider>
   );
 }
+
+
+// pull to refresh feature
+// axios retry feature
 
 function AppContent() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -95,6 +99,7 @@ function AppContent() {
           data={posts}
           keyExtractor={item => item.id.toString()}
           contentInset={safeAreaInsets}
+          refreshControl={<RefreshControl refreshing={loading} onRefresh={getPostsWithAwaitAxios} />}
           renderItem={({ item }) => (
             <View style={styles.listContainer}>
               <Text>
