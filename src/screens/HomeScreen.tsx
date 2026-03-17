@@ -9,19 +9,19 @@ import {
 import { getPostsWithAxios, TPostProps } from '../api/posts';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-function PostItem({ title, body }: TPostProps) {
-  return (
-    <View style={styles.postItem}>
-      <Text>{title}</Text>
-      <Text>{body}</Text>
-    </View>
-  );
-}
-
 type AllPostsProps = {
   loading: boolean;
   posts: TPostProps[];
 };
+
+function PostItem({ title, body }: TPostProps) {
+  return (
+    <View style={styles.postItem}>
+      <Text style={styles.postTitle}>{title}</Text>
+      <Text>{body}</Text>
+    </View>
+  );
+}
 
 function AllPosts({ loading, posts }: AllPostsProps) {
   return loading ? (
@@ -90,5 +90,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     marginBottom: 16,
+  },
+  postTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textTransform: 'capitalize',
   },
 });
