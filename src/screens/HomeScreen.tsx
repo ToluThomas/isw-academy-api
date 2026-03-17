@@ -7,6 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { getPostsWithThen, PostProps } from '../api/posts';
+import { createAsyncStorage } from '@react-native-async-storage/async-storage';
 
 function PostItem({ title, body }: PostProps) {
   return (
@@ -39,9 +40,14 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
+  const storage = createAsyncStorage('posts');
+
   useEffect(() => {
     getPostsWithThen()
-      .then(setPosts)
+      .then((data: PostProps[]) => {
+        setPosts(data);
+        storage.setItem('posts', JSON.stringify(data));
+      })
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
