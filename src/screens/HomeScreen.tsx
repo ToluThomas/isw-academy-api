@@ -6,10 +6,10 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from 'react-native';
-import { getPostsWithThen, PostProps } from '../api/posts';
-import { createAsyncStorage } from '@react-native-async-storage/async-storage';
+import { getPostsWithAxios, TPostProps } from '../api/posts';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-function PostItem({ title, body }: PostProps) {
+function PostItem({ title, body }: TPostProps) {
   return (
     <View style={styles.postItem}>
       <Text>{title}</Text>
@@ -20,7 +20,7 @@ function PostItem({ title, body }: PostProps) {
 
 type AllPostsProps = {
   loading: boolean;
-  posts: PostProps[];
+  posts: TPostProps[];
 };
 
 function AllPosts({ loading, posts }: AllPostsProps) {
@@ -36,20 +36,31 @@ function AllPosts({ loading, posts }: AllPostsProps) {
 }
 
 export default function HomeScreen() {
-  const [posts, setPosts] = useState<PostProps[]>([]);
+  const [posts, setPosts] = useState<TPostProps[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
 
-  const storage = createAsyncStorage('posts');
+  async function getPostsFromStorage(): Promise<TPostProps[]> {
+    const postsString = await AsyncStorage.getItem('posts');
+    if (postsString) return JSON.parse(postsString);
+    return [];
+  }
 
   useEffect(() => {
-    getPostsWithThen()
-      .then((data: PostProps[]) => {
-        setPosts(data);
-        storage.setItem('posts', JSON.stringify(data));
-      })
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+    getPostsFromStorage().then(storedPosts => {
+      if (storedPosts.length) {
+        setPosts(storedPosts);
+        setLoading(false);
+      } else {
+        getPostsWithAxios()
+          .then(async (data: TPostProps[]) => {
+            setPosts(data);
+            await AsyncStorage.setItem('posts', JSON.stringify(data));
+          })
+          .catch(err => setError(err.message))
+          .finally(() => setLoading(false));
+      }
+    });
   }, []);
 
   console.log('Posts:', posts);

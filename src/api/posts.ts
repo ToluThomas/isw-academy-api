@@ -1,29 +1,29 @@
 import client from './client';
 
-type PostProps = {
+type TPostProps = {
   id?: number;
   userId?: number;
   title: string;
   body: string;
 };
 
-export function getPostsWithAxios(): Promise<PostProps[]> {
+export function getPostsWithAxios(): Promise<TPostProps[]> {
   return client.get('/posts').then(response => response.data);
 }
 
-export function getPostsWithAxiosError(): Promise<PostProps[]> {
+export function getPostsWithAxiosError(): Promise<TPostProps[]> {
   return client.get('/Tello').then(response => response.data);
 }
 
-export function getPostsWithThen(): Promise<PostProps[]> {
+export function getPostsWithThen(): Promise<TPostProps[]> {
   return fetch('https://jsonplaceholder.typicode.com/posts').then(response =>
     response.json(),
   );
 }
 
-export async function getPostsWithAsyncAwait(): Promise<PostProps[]> {
+export async function getPostsWithAsyncAwait(): Promise<TPostProps[]> {
   const response = await fetch('https://jsonplaceholder.typicode.com/posts');
   return await response.json();
 }
 
-export type { PostProps };
+export type { TPostProps };
