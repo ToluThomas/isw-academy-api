@@ -4,6 +4,7 @@ import {
   ActivityIndicator,
   FlatList,
   StyleSheet,
+  Alert,
 } from 'react-native';
 import React, { useRef, useState } from 'react';
 import { getPostsWithAxios, PostProp } from '../api/post';
@@ -12,6 +13,10 @@ type AllPostProps = {
   loading: Boolean;
   posts: PostProp[];
   setRefreshCount?: React.Dispatch<React.SetStateAction<number>>;
+};
+
+type ResponseError = {
+  message: string;
 };
 
 function PostItem({ title, body }: PostProp) {
@@ -29,8 +34,13 @@ const AllPost = ({ loading, posts, setRefreshCount }: AllPostProps) => {
   const listRef = useRef<FlatList<PostProp>>(null);
 
   async function getRefreshedPosts() {
-    await getPostsWithAxios();
-    setRefreshCount?.(prev => prev + 1);
+    try {
+      await getPostsWithAxios();
+      setRefreshCount?.(prev => prev + 1);
+    } catch (e) {
+      const error = e as ResponseError;
+      Alert.alert('Error', error.message);
+    }
   }
 
   const onRefresh = async () => {
