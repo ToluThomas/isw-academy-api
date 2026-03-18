@@ -16,4 +16,4 @@ client.interceptors.request.use(async config => {
   return config;
 });
 
-client.interceptors.response.use();
+// client.interceptors.response.use();

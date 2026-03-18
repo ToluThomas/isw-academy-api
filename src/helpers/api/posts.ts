@@ -1,10 +1,10 @@
 import { client } from './request';
 import { TPostProps } from '../../components/molecules/PostItem';
 
-export function getPostsWithAxios(callback: (posts: TPostProps[]) => void) {
+export function getPostsWithAxios() {
   return client.get('/posts').then(response => {
     const responseJson = response.data;
-    callback?.(responseJson);
+    return responseJson;
   });
 }
 

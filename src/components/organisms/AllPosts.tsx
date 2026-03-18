@@ -25,9 +25,8 @@ export default function AllPosts() {
   }
 
   function onRefresh() {
-    getPostsWithAxios(posts => {
-      onFetchPosts(posts);
-    })
+    getPostsWithAxios()
+      .then(onFetchPosts)
       .catch(e => {
         const error = e.message;
         console.log('error', e);
