@@ -1,4 +1,10 @@
-import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import PostItem, { TPostProps } from '../molecules/PostItem';
 import { useEffect, useState } from 'react';
 import { retrievePostsFromMMKV, savePostsInMMKV } from '../../helpers/api';
@@ -7,6 +13,7 @@ import { getPostsWithAxios } from '../../helpers/api/posts';
 export default function AllPosts() {
   const [posts, setPosts] = useState<TPostProps[]>();
   const [isLoading, setLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   function onFetchPosts(posts: TPostProps[]) {
     setPosts(posts);
@@ -20,7 +27,13 @@ export default function AllPosts() {
   function onRefresh() {
     getPostsWithAxios(posts => {
       onFetchPosts(posts);
-    }).finally(stopLoading);
+    })
+      .catch(e => {
+        const error = e.message;
+        console.log('error', e);
+        if (error) setErrorMessage(error);
+      })
+      .finally(stopLoading);
   }
 
   useEffect(() => {
@@ -43,6 +56,10 @@ export default function AllPosts() {
 
   return isLoading ? (
     <ActivityIndicator />
+  ) : errorMessage ? (
+    <View style={styles.errorContainer}>
+      <Text>{errorMessage}</Text>
+    </View>
   ) : (
     <FlatList
       data={posts}
@@ -56,4 +73,10 @@ export default function AllPosts() {
 
 const styles = StyleSheet.create({
   list: { gap: 16 },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    textAlign: 'center',
+  },
 });
