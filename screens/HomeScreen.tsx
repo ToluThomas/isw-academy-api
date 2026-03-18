@@ -1,13 +1,13 @@
 import { StyleSheet, Text, View } from 'react-native'
 import React from 'react'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, } from 'react-native';
 import {
 
     useSafeAreaInsets,
 } from 'react-native-safe-area-context';
-import { createAsyncStorage } from "@react-native-async-storage/async-storage";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { client } from '../api';
 
 
@@ -17,46 +17,27 @@ function AppContent() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-
-    const storage = createAsyncStorage("appDB");
-
-    const getPostsWithAwaitAxios = async (): Promise<void> => {
+    const getPostsWithAwaitAxios = useCallback(async (): Promise<void> => {
         try {
             const fetchPosts = await client.get('/posts');
-            await storage.setItem("Posts", JSON.stringify(fetchPosts.data));
+            await AsyncStorage.setItem("Posts", JSON.stringify(fetchPosts.data));
             setPosts(fetchPosts.data);
-
-
-            const token = await storage.getItem("Posts");
+            const token = await AsyncStorage.getItem("Posts");
             console.log("Stored token:", token);
             setError("");
         } catch (err) {
             setError("Error fetching posts");
-            // console.error('Error fetching all posts:', err);
+            console.error('Error fetching all posts:', err);
         } finally {
             setLoading(false);
         };
-    }
+    }, [])
 
-
-
-
-
-    // create a storage instance
-
-    // async function demo() {
-    //   await storage.setItem("userToken", "abc123");
-
-    //   const token = await storage.getItem("userToken");
-    //   console.log("Stored token:", token); // abc123
-
-    //   await storage.removeItem("userToken");
-    // }
 
 
     useEffect(() => {
         getPostsWithAwaitAxios();
-    }, [])
+    }, [getPostsWithAwaitAxios])
 
     return (
         <View style={[styles.container, { paddingVertical: safeAreaInsets.top }]}>
