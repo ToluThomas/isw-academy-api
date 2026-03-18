@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   StyleSheet,
   Text,
@@ -10,10 +11,13 @@ import { useEffect, useState } from 'react';
 import { retrievePostsFromMMKV, savePostsInMMKV } from '../../helpers/api';
 import { getPostsWithAxios } from '../../helpers/api/posts';
 
+type ResponseError = {
+  message: string;
+};
+
 export default function AllPosts() {
   const [posts, setPosts] = useState<TPostProps[]>();
   const [isLoading, setLoading] = useState<boolean>(false);
-  const [errorMessage, setErrorMessage] = useState<string>('');
 
   function onFetchPosts(posts: TPostProps[]) {
     setPosts(posts);
@@ -28,9 +32,8 @@ export default function AllPosts() {
     getPostsWithAxios()
       .then(onFetchPosts)
       .catch(e => {
-        const error = e.message;
-        console.log('error', e);
-        if (error) setErrorMessage(error);
+        const error = e as ResponseError;
+        Alert.alert('Error', error.message);
       })
       .finally(stopLoading);
   }
@@ -55,10 +58,6 @@ export default function AllPosts() {
 
   return isLoading ? (
     <ActivityIndicator />
-  ) : errorMessage ? (
-    <View style={styles.errorContainer}>
-      <Text>{errorMessage}</Text>
-    </View>
   ) : (
     <FlatList
       data={posts}
@@ -72,10 +71,4 @@ export default function AllPosts() {
 
 const styles = StyleSheet.create({
   list: { gap: 16 },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    textAlign: 'center',
-  },
 });
