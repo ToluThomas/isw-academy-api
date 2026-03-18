@@ -1,11 +1,5 @@
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-} from 'react-native';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import {
   getPostFromAsyncStorage,
   getPostsWithAsync,
@@ -13,58 +7,11 @@ import {
   getPostsWithThen,
   PostProp,
 } from '../api/post';
-
-type AllPostProps = {
-  loading: Boolean;
-  posts: PostProp[];
-};
+import AllPost from '../component/AllPost';
 
 type ResponseError = {
   message: string;
 };
-
-function AllPost({ loading, posts }: AllPostProps) {
-  // const [refreshing, setRefreshing] = useState<Boolean | null | undefined> (false)
-
-  //   const listRef = useRef<FlatList<PostProp>>(null);
-
-  //   async function getRefreshedPosts () {
-  //   try {
-  //     const resfreshedData = getPostsWithAxios();
-  //   } catch (error) {
-
-  //   }
-  // }
-
-  // const onRefresh = async () => {
-  //   setRefreshing(true);
-  //   await loadPosts();
-
-  //   listRef.current?.scrollToOffset({ offset: 0, animated: true }); // ✅ scroll to top
-  //   setRefreshing(false);
-  // };
-
-  return loading ? (
-    <ActivityIndicator />
-  ) : (
-    <FlatList
-      data={posts}
-      renderItem={({ item }) => <PostItem {...item} />}
-      contentContainerStyle={styles.contentContainer}
-      // refreshing={refreshing}
-      // onRefresh={onRefresh}
-    />
-  );
-}
-
-function PostItem({ title, body }: PostProp) {
-  return (
-    <View style={styles.PostItem}>
-      <Text>{title}</Text>
-      <Text>{body}</Text>
-    </View>
-  );
-}
 
 const HomeScreen = () => {
   const [post, setPosts] = useState<PostProp[]>([]);
@@ -72,6 +19,7 @@ const HomeScreen = () => {
   const [loading, setLoading] = useState<Boolean>(true);
 
   const [error, setError] = useState<string>('');
+  const [refreshCount, setRefreshCount] = useState<number>(0);
 
   const loadPostWithThen = async () => {
     try {
@@ -128,23 +76,23 @@ const HomeScreen = () => {
   }
 
   useEffect(() => {
-    // getPostsWithThen();
-    // getPostsWithAsync();
-    // getPostsWithAxiosError();
-    // PostsWithAxios();
-    // getPostFromAsyncStorage();
     loadPost();
-    //loadPostWithAsyncFetchFunction();
-    //loadPostWithThen();
-    //loadPostWithAxiosError();
   }, []);
+
+  useEffect(() => {
+    loadPost();
+  }, [refreshCount]);
 
   return (
     <View style={styles.container}>
       {error ? (
         <Text>{error}</Text>
       ) : (
-        <AllPost loading={loading} posts={post} />
+        <AllPost
+          loading={loading}
+          posts={post}
+          setRefreshCount={setRefreshCount}
+        />
       )}
     </View>
   );
@@ -155,15 +103,5 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  PostItem: {
-    paddingHorizontal: 12,
-    marginHorizontal: 10,
-    borderWidth: 1,
-    borderRadius: 10,
-    borderColor: 'green',
-  },
-  contentContainer: {
-    gap: 16,
   },
 });

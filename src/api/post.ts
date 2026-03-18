@@ -22,7 +22,7 @@ export async function getPostsWithAsync(): Promise<PostProp[]> {
   return responseJson;
 }
 
-function getPostsWithAxios(): Promise<PostProp[]> {
+export function getPostsWithAxios(): Promise<PostProp[]> {
   return apiClient.get('/posts').then(async response => {
     await AsyncStorage.setItem('Posts', JSON.stringify(response.data));
     return response.data;
