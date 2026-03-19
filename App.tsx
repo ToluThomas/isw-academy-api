@@ -5,8 +5,7 @@
  * @format
  */
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import axios from 'axios';
+import { client } from './src/api/request';
 import { useEffect, useState } from 'react';
 import {
   StatusBar,
@@ -16,17 +15,10 @@ import {
   Text,
   FlatList,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
-
-const client = axios.create({
-  baseURL: 'https://jsonplaceholder.typicode.com',
-});
-
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
-import { get } from 'react-native/Libraries/NativeComponent/NativeComponentRegistry';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -58,9 +50,16 @@ function PostItem({ title, body }: PostProps) {
 type AllPostsProps = {
   loading: Boolean;
   posts: PostProps[];
+  refreshing: boolean;
+  onRefresh: () => void;
 };
 
-function AllPosts({ loading, posts }: AllPostsProps) {
+type Error = {
+  error: string;
+  message: string;
+};
+
+function AllPosts({ loading, posts, refreshing, onRefresh }: AllPostsProps) {
   return loading ? (
     <ActivityIndicator />
   ) : (
@@ -68,6 +67,8 @@ function AllPosts({ loading, posts }: AllPostsProps) {
       data={posts}
       renderItem={({ item }) => <PostItem {...item} />}
       contentContainerStyle={{ gap: 16 }}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
     />
   );
 }
@@ -80,16 +81,48 @@ function AppContent() {
 
   const [error, setError] = useState<string>('');
 
-  function getPostsWithAxios() {
-    client
-      .get('/posts')
-      .then(Response => {
-        setPosts(Response.data);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+  const [refreshing, setrefreshing] = useState<boolean>(false);
+
+  const onRefresh = async () => {
+    setrefreshing(true);
+    try {
+      await getPostWithAxiosUsingAsyncStorage();
+      console.log('Posts after refresh:', posts);
+    } catch (e) {
+      const errormessage = e as Error;
+      Alert.alert('Error', errormessage.message);
+    } finally {
+      setrefreshing(false);
+      setLoading(false);
+    }
+  };
+
+  function getPostWithAxiosUsingAsyncStorage() {
+    return client.get('/posts').then(response => {
+      const responseJson = response.data;
+      setPosts(responseJson);
+      return AsyncStorage.setItem('posts', JSON.stringify(responseJson));
+    });
   }
+
+  async function retrievePostsFromAsyncStorage(): Promise<PostProps[]> {
+    const storedPosts = await AsyncStorage.getItem('posts');
+    if (storedPosts) {
+      return JSON.parse(storedPosts);
+    }
+    return [];
+  }
+
+  // function getPostsWithAxios() {
+  //   client
+  //     .get('/posts')
+  //     .then(Response => {
+  //       setPosts(Response.data);
+  //     })
+  //     .finally(() => {
+  //       setLoading(false);
+  //     });
+  // }
 
   function getPostsWithAxiosError() {
     client
@@ -130,7 +163,14 @@ function AppContent() {
   }
   useEffect(() => {
     // getPostsWithThen();
-    getPostsWithAxiosError();
+    retrievePostsFromAsyncStorage().then(retrievedPosts => {
+      if (retrievedPosts.length) {
+        setPosts(retrievedPosts);
+        setLoading(false);
+      } else {
+        return getPostWithAxiosUsingAsyncStorage();
+      }
+    });
   }, []);
 
   console.log('Posts:', posts);
@@ -140,7 +180,12 @@ function AppContent() {
       {error ? (
         <Text>{error}</Text>
       ) : (
-        <AllPosts loading={loading} posts={posts} />
+        <AllPosts
+          loading={loading}
+          posts={posts}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+        />
       )}
     </View>
   );
