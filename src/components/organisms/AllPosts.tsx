@@ -19,10 +19,10 @@ export default function AllPosts() {
   }
 
   useEffect(() => {
-    onRefresh();
-  }, []);
+    if (!posts.length) onRefresh();
+  }, [posts.length]);
 
-  return isLoading ? (
+  return isLoading && !posts.length ? (
     <ActivityIndicator />
   ) : (
     <FlatList

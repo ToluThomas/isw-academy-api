@@ -18,10 +18,12 @@
     "axios-retry": "^4.5.0",
     "react": "19.2.3",
     "react-native": "0.84.1",
+    "react-native-encrypted-storage": "^4.0.3",
     "react-native-mmkv": "^4.2.0",
     "react-native-nitro-modules": "^0.35.2",
     "react-native-safe-area-context": "^5.5.2",
-    "react-redux": "^9.2.0"
+    "react-redux": "^9.2.0",
+    "redux-persist": "^6.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

@@ -1,13 +1,23 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import counterReducer from './slices/counterSlice';
 import postsReducer from './slices/postsSlice';
+import { persistReducer } from 'redux-persist';
+import EncryptedStorage from 'react-native-encrypted-storage';
 
-export const store = configureStore({
-  reducer: {
-    counter: counterReducer,
-    posts: postsReducer,
-  },
+const combinedReducers = combineReducers({
+  counter: counterReducer,
+  posts: postsReducer,
 });
+
+const persistConfig = {
+  key: 'root',
+  storage: EncryptedStorage,
+  blacklist: ['counter'], // we don't want to keep count
+};
+
+const persistedReducer = persistReducer(persistConfig, combinedReducers);
+
+export const store = configureStore({ reducer: persistedReducer });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;
