@@ -28,8 +28,8 @@ const AllPost = () => {
   const listRef = useRef<FlatList<PostProp>>(null);
 
   useEffect(() => {
-    onRefresh();
-  }, []);
+    if (!posts.length) onRefresh();
+  }, [posts.length]);
 
   async function onRefresh() {
     dispatch(fetchPosts());

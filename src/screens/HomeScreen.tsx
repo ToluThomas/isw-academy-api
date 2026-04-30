@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useSelector } from 'react-redux';
 import { PostSelector } from '../../redux/reduxSelectors/postsSelectors';
 import AllPost from '../component/AllPost';
+import ProfileScreen from './ProfileScreen';
 
 const HomeScreen = () => {
   const { errorMessage } = useSelector(PostSelector);
@@ -12,8 +13,10 @@ const HomeScreen = () => {
       {errorMessage ? (
         <Text>{errorMessage}</Text>
       ) : (
-        // <ProfileScreen />
-        <AllPost />
+        <>
+          <ProfileScreen />
+          <AllPost />
+        </>
       )}
     </View>
   );
