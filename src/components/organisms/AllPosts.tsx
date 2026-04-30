@@ -22,7 +22,7 @@ export default function AllPosts() {
     if (!posts.length) onRefresh();
   }, [posts.length]);
 
-  return isLoading && !posts.length ? (
+  return isLoading ? (
     <ActivityIndicator />
   ) : (
     <FlatList
