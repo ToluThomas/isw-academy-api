@@ -1,14 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   StyleSheet,
   View,
   Text,
   ActivityIndicator,
   FlatList,
-  Alert,
 } from 'react-native';
-import { client } from '../api/request';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { postSelector } from '../redux/selectors/postSelectors';
+import { AppDispatch } from '../redux/store';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchPosts } from '../redux/slices/postSlice';
 
 type PostProps = {
   id?: number;
@@ -18,97 +20,87 @@ type PostProps = {
 };
 
 type AllPostsProps = {
-  loading: Boolean;
+  loading?: boolean;
   posts: PostProps[];
-  refreshing: boolean;
+  refreshing?: boolean;
   onRefresh: () => void;
 };
 
-type ErrorObj = {
-  error: string;
-  message: string;
-};
+function PostItem({ title, body }: PostProps) {
+  return (
+    <View style={styles.postItem}>
+      <Text style={styles.postTitle}>{title}</Text>
+      <Text>{body}</Text>
+    </View>
+  );
+}
+
+function AllPosts({ loading, posts, refreshing, onRefresh }: AllPostsProps) {
+  return loading ? (
+    <ActivityIndicator />
+  ) : (
+    <FlatList
+      data={posts}
+      renderItem={({ item }) => <PostItem {...item} />}
+      // `gap` isn't supported in all React Native versions — use a separator instead
+      contentContainerStyle={{ padding: 16 }}
+      ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+    />
+  );
+}
 
 const HomeScreen = () => {
-  const [posts, setPosts] = useState<PostProps[]>([]);
-  const [loading, setLoading] = useState<Boolean>(true);
-  const [error, setError] = useState<string>('');
-  const [refreshing, setRefreshing] = useState<boolean>(false);
+  const { posts, isLoading, errorMessage } = useSelector(postSelector);
+  const dispatch = useDispatch<AppDispatch>();
 
-  function PostItem({ title, body }: PostProps) {
-    return (
-      <View style={styles.postItem}>
-        <Text style={styles.postTitle}>{title}</Text>
-        <Text>{body}</Text>
-      </View>
-    );
-  }
-
-  const getPostWithAxiosUsingAsyncStorage = () => {
-    return client.get('/posts').then(response => {
-      const responseJson = response.data;
-      setPosts(responseJson);
-      return AsyncStorage.setItem('posts', JSON.stringify(responseJson));
-    });
-  };
-
-  async function retrievePostsFromAsyncStorage(): Promise<PostProps[]> {
-    const storedPosts = await AsyncStorage.getItem('posts');
-    if (storedPosts) {
-      return JSON.parse(storedPosts);
-    }
-    return [];
-  }
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await getPostWithAxiosUsingAsyncStorage();
-    } catch (e) {
-      const err = e as ErrorObj;
-      Alert.alert('Error', err.message);
-    } finally {
-      setRefreshing(false);
-      setLoading(false);
-    }
-  };
-
-  function AllPosts({ loading, posts, refreshing, onRefresh }: AllPostsProps) {
-    return loading ? (
-      <ActivityIndicator />
-    ) : (
-      <FlatList
-        data={posts}
-        renderItem={({ item }) => <PostItem {...item} />}
-        // `gap` isn't supported in all React Native versions — use a separator instead
-        contentContainerStyle={{ padding: 16 }}
-        ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-      />
-    );
+  function onRefresh() {
+    dispatch(fetchPosts());
   }
 
   useEffect(() => {
-    retrievePostsFromAsyncStorage().then(retrievedPosts => {
-      if (retrievedPosts.length) {
-        setPosts(retrievedPosts);
-        setLoading(false);
-      } else {
-        return getPostWithAxiosUsingAsyncStorage();
-      }
-    });
+    onRefresh();
   }, []);
+
+  // const getPostWithAxiosUsingAsyncStorage = () => {
+  //   return client.get('/posts').then(response => {
+  //     const responseJson = response.data;
+  //     setPosts(responseJson);
+  //     return AsyncStorage.setItem('posts', JSON.stringify(responseJson));
+  //   });
+  // };
+
+  // async function retrievePostsFromAsyncStorage(): Promise<PostProps[]> {
+  //   const storedPosts = await AsyncStorage.getItem('posts');
+  //   if (storedPosts) {
+  //     return JSON.parse(storedPosts);
+  //   }
+  //   return [];
+  // }
+
+  // const onRefresh = async () => {
+  //   setRefreshing(true);
+  //   try {
+  //     await getPostWithAxiosUsingAsyncStorage();
+  //   } catch (e) {
+  //     const err = e as ErrorObj;
+  //     Alert.alert('Error', err.message);
+  //   } finally {
+  //     setRefreshing(false);
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <View style={styles.container}>
-      {error ? (
-        <Text>{error}</Text>
+      {errorMessage ? (
+        <Text>{errorMessage}</Text>
       ) : (
         <AllPosts
-          loading={loading}
+          loading={isLoading}
           posts={posts}
-          refreshing={refreshing}
+          refreshing={isLoading}
           onRefresh={onRefresh}
         />
       )}

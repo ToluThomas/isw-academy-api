@@ -1,18 +1,22 @@
 import React from 'react';
 import { Provider } from 'react-redux';
-import { store } from './src/store/store';
-import { Counter } from './src/Counter';
-import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
-// import HomeScreen from './src/screens/HomeScreen'
+import { store, persistor } from './src/redux/store';
+import { StatusBar, StyleSheet } from 'react-native';
+import HomeScreen from './src/pages/HomeScreen';
+import Counter from './src/Counter';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { PersistGate } from 'redux-persist/integration/react';
 
 export default function App() {
   return (
     <Provider store={store}>
-      <SafeAreaView style={styles.container}>
-        <StatusBar />
-        {/* <HomeScreen/> */}
-        <Counter/>
-      </SafeAreaView>
+      <PersistGate loading={null} persistor={persistor}>
+        <SafeAreaProvider style={styles.container}>
+          <StatusBar />
+          <HomeScreen />
+          {/* <Counter /> */}
+        </SafeAreaProvider>
+      </PersistGate>
     </Provider>
   );
 }
