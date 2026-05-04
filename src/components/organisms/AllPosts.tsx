@@ -1,67 +1,31 @@
-import { useEffect, useState, useCallback } from 'react';
-import PostItem, { PostProps } from '../molecules/PostItem';
-import { ActivityIndicator, Alert, FlatList, StyleSheet } from 'react-native';
-import { retrievePostsFromMMKV, savePostsInMMKV } from '../../helpers/api';
-import { getPostsWithAxios } from '../../helpers/api/posts';
-
-type ResponseError = {
-  message: string;
-};
+import { useEffect } from 'react';
+import PostItem from '../molecules/PostItem';
+import { ActivityIndicator, FlatList, StyleSheet } from 'react-native';
+import { useDispatch, useSelector } from 'react-redux';
+import { postsSelector } from '../../redux/selectors/postsSelector';
+import { fetchPosts } from '../../redux/slices/postsSlice';
+import { AppDispatch } from '../../redux/store';
 
 export default function AllPosts() {
-  const [posts, setPosts] = useState<PostProps[]>();
-  const [loading, setLoading] = useState<Boolean>(true);
+  const { posts, isLoading } = useSelector(postsSelector);
+  const dispatch = useDispatch<AppDispatch>();
 
-  function onFetchPosts(fetchedPosts: PostProps[]) {
-    setPosts(fetchedPosts);
-    savePostsInMMKV(fetchedPosts);
+  function onRefresh() {
+    dispatch(fetchPosts());
   }
-
-  function stopLoading() {
-    setLoading(false);
-  }
-
-  const onRefresh = useCallback(() => {
-    setLoading(true);
-    getPostsWithAxios()
-      .then(onFetchPosts)
-      .catch(e => {
-        const error = e as ResponseError;
-        Alert.alert('Error', error.message);
-      })
-      .finally(stopLoading);
-  }, []);
 
   useEffect(() => {
-    const storedPosts = retrievePostsFromMMKV();
-    if (storedPosts.length > 0) {
-      setPosts(storedPosts);
-      setLoading(false);
-    } else {
-      onRefresh();
-    }
-  }, [onRefresh]);
+    if (!posts.length) onRefresh();
+  }, [posts.length]);
 
-  // Fetching and saving posts with AsyncStorage
-  // useEffect(() => {
-  //   retrievePostsFromAsyncStorage().then(retrievedPosts => {
-  //     if (retrievedPosts.length > 0) {
-  //       setPosts(retrievedPosts);
-  //       setLoading(false);
-  //     } else {
-  //       getPostsWithAxios(setPosts);
-  //     }
-  //   });
-  // }, []);
-
-  return loading ? (
+  return isLoading ? (
     <ActivityIndicator />
   ) : (
     <FlatList
       data={posts}
       renderItem={({ item }) => <PostItem {...item} />}
       contentContainerStyle={styles.list}
-      refreshing={loading}
+      refreshing={isLoading}
       onRefresh={onRefresh}
     />
   );
